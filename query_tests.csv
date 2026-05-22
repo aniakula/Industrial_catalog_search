@@ -1,0 +1,2 @@
+timestamp,query,fastener_type,drive_type,thread_size,length,material,grade,finish,standard,top1_id,top1_score,top1_confidence,top2_id,top2_score,top3_id,top3_score
+2026-05-22T10:47:14.411Z,M8 flat washer,,,,,,,,,CAT-0301,0.3079,0.0961,CAT-0220,0.3056,CAT-0086,0.2963
