@@ -191,7 +191,7 @@ For each part in `catalog_parts`:
 3. **Final score**:
 
 \[
-\text{final\_score} = 0.60 \times \text{attr\_score} + 0.40 \times \text{embedding\_score}
+\text{final_score} = 0.60 \times \text{attr_score} + 0.40 \times \text{embedding_score}
 \]
 
 ### Attribute weights
@@ -225,13 +225,13 @@ Process:
 Boost formula:
 
 \[
-\text{boosted\_score} = \min\left(\text{score} \times \left(1 + B_{\max} \times D \times R\right),\ 1\right)
+\text{boosted_score} = \min\left(\text{score} \times \left(1 + B\_{\max} \times D \times R\right),\ 1\right)
 \]
 
 Where:
 
-- \(B_{\max} = 0.25\) (max boost strength)
-- \(D = \min(\text{recent\_orders}/10, 1)\) (history depth factor)
+- \(B\_{\max} = 0.25\) (max boost strength)
+- \(D = \min(\text{recent_orders}/10, 1)\) (history depth factor)
 - \(R \in [0,1]\) (recency weight for matching SKU)
 
 UI marks boosted results with:
@@ -268,7 +268,7 @@ Per-rank margin compares score gaps:
 Margin is scaled and capped:
 
 \[
-\text{margin} = \min\left(2 \times \frac{s_i - s_{i+1}}{s_i},\ 1\right)
+\text{margin} = \min\left(2 \times \frac{s*i - s*{i+1}}{s_i},\ 1\right)
 \]
 
 ### Confidence formula
@@ -285,7 +285,7 @@ Formula:
 \min\left(
 \text{queryCoverage}
 \times
-\left(\text{final\_score}^{\,0.60}\right)
+\left(\text{final_score}^{\,0.60}\right)
 \times
 \left(1 + 0.25 \times \text{margin}\right),
 1
@@ -309,16 +309,3 @@ Interpretation:
 5. Apply optional customer-history boost
 6. Recompute confidence
 7. Return top 3 results + diagnostics
-
----
-
-## Run Locally
-
-```bash
-npm install
-npm run dev
-```
-
-Open:
-
-- [http://localhost:3001](http://localhost:3001) (if 3000 is occupied)
