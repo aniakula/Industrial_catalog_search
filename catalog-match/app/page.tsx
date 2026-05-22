@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import CustomerSelect from "@/components/CustomerSelect";
 import ResultCard from "@/components/ResultCard";
 import LoadingSpinner from "@/components/LoadingSpinner";
@@ -8,7 +8,6 @@ import type { PartAttributes, SearchResponse } from "@/lib/types";
 
 const ATTRIBUTE_LABELS: Record<string, string> = {
   fastener_type: "Type",
-  drive_type:    "Drive",
   thread_size:   "Thread",
   length:        "Length",
   material:      "Material",
@@ -18,7 +17,8 @@ const ATTRIBUTE_LABELS: Record<string, string> = {
 };
 
 const EXAMPLE_QUERIES = [
-  "M8 flat washer",
+  "what is my most purchased product",
+  "what is the largest washer you have",
   "SHCS 7/16 x 2-1/2",
   "1/2 rod 6 foot",
   "lock washer 5/8",
@@ -26,17 +26,85 @@ const EXAMPLE_QUERIES = [
   "brass hex nut 1/2-13",
 ];
 
+type QueryModePreview = "history" | "action" | "catalog";
+
+function detectModePreview(input: string): QueryModePreview {
+  const q = input.toLowerCase();
+  if (
+    q.includes("last") ||
+    q.includes("most ordered") ||
+    q.includes("most purchased") ||
+    q.includes("my company") ||
+    q.includes("we bought") ||
+    q.includes("our")
+  ) {
+    return "history";
+  }
+  if (
+    q.includes("largest") ||
+    q.includes("smallest") ||
+    q.includes("shiniest") ||
+    q.includes("strongest") ||
+    q.includes("best")
+  ) {
+    return "action";
+  }
+  return "catalog";
+}
+
+function formatElapsed(ms: number): string {
+  return `${(ms / 1000).toFixed(1)}s`;
+}
+
+function getStatusMessage(mode: QueryModePreview, elapsedMs: number): string {
+  if (elapsedMs < 1200) return "Detecting query type...";
+
+  if (mode === "history") {
+    if (elapsedMs < 3500) return "Customer history query detected.";
+    if (elapsedMs < 6500) return "Example query being found.";
+    return "Query being matched to catalog.";
+  }
+
+  if (mode === "action") {
+    if (elapsedMs < 3500) return "Action query detected.";
+    if (elapsedMs < 6500) return "Example query being found.";
+    return "Query being matched to catalog.";
+  }
+
+  return "Catalog query detected — query being matched to catalog.";
+}
+
 export default function Home() {
   const [query, setQuery]             = useState("");
   const [customerId, setCustomerId]   = useState("");
   const [loading, setLoading]         = useState(false);
   const [response, setResponse]       = useState<SearchResponse | null>(null);
   const [error, setError]             = useState<string | null>(null);
+  const [searchStartedAt, setSearchStartedAt] = useState<number | null>(null);
+  const [elapsedMs, setElapsedMs] = useState(0);
+  const [lastDurationMs, setLastDurationMs] = useState<number | null>(null);
+  const [lastFinalStatus, setLastFinalStatus] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!loading || searchStartedAt === null) return;
+    const id = window.setInterval(() => {
+      setElapsedMs(Date.now() - searchStartedAt);
+    }, 100);
+    return () => window.clearInterval(id);
+  }, [loading, searchStartedAt]);
+
+  const modePreview = useMemo(() => detectModePreview(query), [query]);
+  const statusMessage = useMemo(() => getStatusMessage(modePreview, elapsedMs), [modePreview, elapsedMs]);
 
   async function handleSearch(e: React.FormEvent) {
     e.preventDefault();
     if (!query.trim()) return;
 
+    const started = Date.now();
+    setSearchStartedAt(started);
+    setElapsedMs(0);
+    setLastDurationMs(null);
+    setLastFinalStatus(null);
     setLoading(true);
     setError(null);
     setResponse(null);
@@ -55,10 +123,20 @@ export default function Home() {
 
       const data: SearchResponse = await res.json();
       setResponse(data);
+      const duration = Date.now() - started;
+      setLastDurationMs(duration);
+      if (data.routing?.classification === "action_history") {
+        setLastFinalStatus("Customer history query detected.");
+      } else if (data.routing?.classification === "action_catalog") {
+        setLastFinalStatus("Action query detected.");
+      } else {
+        setLastFinalStatus("Catalog query detected.");
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : "Something went wrong");
     } finally {
       setLoading(false);
+      setSearchStartedAt(null);
     }
   }
 
@@ -155,7 +233,17 @@ export default function Home() {
         </div>
 
         {/* Results */}
-        {loading && <LoadingSpinner />}
+        {loading && (
+          <div className="space-y-3">
+            <LoadingSpinner />
+            <div className="rounded-xl border border-blue-200 bg-blue-50 px-4 py-3 text-sm text-blue-700">
+              <p className="font-medium">{statusMessage}</p>
+              <p className="text-xs text-blue-600 mt-1">
+                Elapsed time: {formatElapsed(elapsedMs)}
+              </p>
+            </div>
+          </div>
+        )}
 
         {error && (
           <div className="rounded-xl border border-red-200 bg-red-50 px-5 py-4 text-sm text-red-700">
@@ -165,6 +253,19 @@ export default function Home() {
 
         {response && !loading && (
           <div>
+            {(lastDurationMs !== null || lastFinalStatus) && (
+              <div className="mb-4 px-4 py-3 bg-white rounded-xl border border-slate-200">
+                {lastFinalStatus && (
+                  <p className="text-sm text-slate-700 font-medium">{lastFinalStatus}</p>
+                )}
+                {lastDurationMs !== null && (
+                  <p className="text-xs text-slate-500 mt-1">
+                    Completed in {formatElapsed(lastDurationMs)}
+                  </p>
+                )}
+              </div>
+            )}
+
             {/* Parsed query attributes */}
             {detectedAttrs.length > 0 && (
               <div className="mb-4 px-4 py-3 bg-white rounded-xl border border-slate-200 flex flex-wrap items-center gap-2">

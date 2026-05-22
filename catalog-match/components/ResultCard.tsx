@@ -4,7 +4,6 @@ import type { SearchResult } from "@/lib/types";
 
 const ATTRIBUTE_LABELS: Record<string, string> = {
   fastener_type: "Type",
-  drive_type:    "Drive",
   thread_size:   "Thread",
   length:        "Length",
   material:      "Material",
@@ -101,6 +100,13 @@ export default function ResultCard({ result, rank }: ResultCardProps) {
                 </>
               )}
             </div>
+            {result.history_boosted && (
+              <div className="mt-2">
+                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-semibold bg-indigo-50 text-indigo-700 border border-indigo-200">
+                  Increased score based on customer history
+                </span>
+              </div>
+            )}
           </div>
         </div>
 

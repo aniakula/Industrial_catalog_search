@@ -20,13 +20,13 @@ const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
 );
 
-const CATALOG_PROCESSED = path.join(__dirname, "../../catalog_processed.csv");
+const CATALOG_PROCESSED = path.join(__dirname, "../../catalog_processed_v4.csv");
 const ORDER_HISTORY     = path.join(__dirname, "../../order_history.csv");
 
 const BATCH_SIZE = 50;
 
 async function uploadCatalog() {
-  console.log("Reading catalog_processed.csv...");
+  console.log("Reading catalog_processed_v4.csv...");
   const raw  = fs.readFileSync(CATALOG_PROCESSED, "utf-8");
   const rows = parse(raw, { columns: true, skip_empty_lines: true });
 
@@ -36,7 +36,6 @@ async function uploadCatalog() {
     description:   r.description,
     active:        r.active === "true",
     fastener_type: r.fastener_type || null,
-    drive_type:    r.drive_type    || null,
     thread_size:   r.thread_size   || null,
     length:        r.length        || null,
     material:      r.material      || null,
@@ -91,7 +90,9 @@ async function uploadOrderHistory() {
 
 async function main() {
   await uploadCatalog();
-  await uploadOrderHistory();
+  // Order history is already in Supabase — skip re-upload to avoid duplicates.
+  // Uncomment the line below if you ever need to reload it from scratch.
+  // await uploadOrderHistory();
   console.log("\nAll uploads complete.");
 }
 

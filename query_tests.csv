@@ -1,2 +1,60 @@
 timestamp,query,fastener_type,drive_type,thread_size,length,material,grade,finish,standard,top1_id,top1_score,top1_confidence,top2_id,top2_score,top3_id,top3_score
 2026-05-22T10:47:14.411Z,M8 flat washer,,,,,,,,,CAT-0301,0.3079,0.0961,CAT-0220,0.3056,CAT-0086,0.2963
+2026-05-22T11:16:51.623Z,M8 flat washer,,,m8,,,,,,CAT-0221,0.7907,0.4301,CAT-1000,0.7907,CAT-0341,0.7892
+2026-05-22T11:20:35.597Z,M8 flat washer,flat washer,,m8,,,,,,CAT-0624,0.7816,0.4706,CAT-0016,0.7811,CAT-0974,0.7788
+2026-05-22T11:30:57.009Z,m8-1.25 flat wshr din 912 a2 ss black oxide,flat washer,,m8,,stainless steel,a2 ss,black oxide,din 912,CAT-0624,0.8475,0.7049,CAT-0016,0.7737,CAT-0688,0.7565
+2026-05-22T11:32:03.492Z,3/8-16 x 1-1/2 hx hd lag scr steel hdg,lag screw,,3/8-16,"1-1/2""",steel,,hdg,,CAT-0001,0.8240,0.6829,CAT-0079,0.7063,CAT-0136,0.6586
+2026-05-22T11:32:47.344Z,3/8-16 x 1-1/2 hx hd lag scr steel hdg,lag screw,,3/8-16,"1-1/2""",steel,,hdg,,CAT-0001,0.8240,0.6829,CAT-0079,0.7063,CAT-0136,0.6586
+2026-05-22T11:33:16.297Z,3/8-16 X 1-1/2 HX HD LAG SCR STEEL HDG,lag screw,,3/8-16,"1-1/2""",steel,,hdg,,CAT-0001,1.0000,0.7942,CAT-0079,0.7401,CAT-0723,0.7295
+2026-05-22T11:50:05.694Z,M8 flat washer,flat washer,,m8,,,,,,CAT-0624,0.7816,0.4706,CAT-0016,0.7811,CAT-0974,0.7788
+2026-05-22T11:51:25.617Z,M8 x 50mm BHCS alloy black oxide,button socket cap screw,,m8,50mm,alloy,,black oxide,,CAT-0100,0.7222,0.6522,CAT-0651,0.5937,CAT-0484,0.5857
+2026-05-22T12:01:55.399Z,M8 flat washer,flat washer,,m8,,,,,,CAT-0624,0.7816,0.4706,CAT-0016,0.7811,CAT-0974,0.7788
+2026-05-22T12:02:07.602Z,1/2 rod 6 foot,,,,6ft,,,,,CAT-0043,0.8863,0.5003,CAT-0348,0.8127,CAT-0257,0.8101
+2026-05-22T12:05:13.360Z,"3/4-10x3/8"" HX CAP SCREW ZN",hex cap screw,,3/4-10,"3/8""",,,zinc,,CAT-0090,0.8255,0.5503,CAT-0704,0.8052,CAT-0273,0.7826
+2026-05-22T12:09:31.036Z,"3/4-10x3/8"" HX CAP SCREW Zn",hex cap screw,,3/4-10,"3/8""",,,zinc,,CAT-0090,0.7999,0.6154,CAT-0704,0.7796,CAT-0273,0.7113
+2026-05-22T12:18:59.543Z,"3/4-10x3/8"" HX CAP SCREW ZN",hex cap screw,,3/4-10,"3/8""",,,zinc,,CAT-0011,0.9204,0.7208,CAT-0090,0.7999,CAT-0704,0.7796
+2026-05-22T12:20:59.580Z,"3/4-10x3/8"" HX CAP SCREW ZN",hex cap screw,,3/4-10,"3/8""",,,zinc,,CAT-0011,0.9204,0.7101,CAT-0090,0.7999,CAT-0704,0.7796
+2026-05-22T12:28:04.552Z,M8 x 50mm BHCS alloy black oxide,button socket cap screw,,m8,50mm,alloy,,black oxide,,CAT-0100,0.7265,0.7549,CAT-0859,0.5789,CAT-0651,0.5743
+2026-05-22T12:28:45.472Z,"3/4-10x3/8"" HX CAP SCREW ZN",hex cap screw,,3/4-10,"3/8""",,,zinc,,CAT-0011,0.9204,0.7337,CAT-0090,0.7999,CAT-0704,0.7796
+2026-05-22T12:30:19.628Z,M8,,,m8,,,,,,CAT-0221,0.8464,0.5126,CAT-1000,0.8464,CAT-0550,0.8425
+2026-05-22T12:35:13.165Z,M8,,,m8,,,,,,CAT-0221,0.8464,0.0440,CAT-1000,0.8464,CAT-0550,0.8425
+2026-05-22T12:35:28.633Z,M8 x 50mm BHCS alloy black oxide,button socket cap screw,,m8,50mm,alloy,,black oxide,,CAT-0100,0.7265,0.5530,CAT-0859,0.5789,CAT-0651,0.5743
+2026-05-22T12:35:43.213Z,M8 flat washer,flat washer,,m8,,,,,,CAT-0624,0.7816,0.1017,CAT-0016,0.7811,CAT-0974,0.7788
+2026-05-22T12:35:54.331Z,brass hex nut 1/2-13,hex nut,,1/2-13,,brass,,,,CAT-0768,0.8221,0.2416,CAT-0107,0.8192,CAT-0459,0.7463
+2026-05-22T12:36:06.679Z,M8 x 50mm BHCS alloy black oxide,button socket cap screw,,m8,50mm,alloy,,black oxide,,CAT-0100,0.7265,0.5530,CAT-0859,0.5789,CAT-0651,0.5743
+2026-05-22T12:41:53.771Z,M8 x 50mm BHCS alloy black oxide,button socket cap screw,,m8,50mm,alloy,,black oxide,,CAT-0100,0.7265,0.8185,CAT-0859,0.5789,CAT-0651,0.5743
+2026-05-22T12:42:11.834Z,M8 flat washer,flat washer,,m8,,,,,,CAT-0624,0.7816,0.1726,CAT-0016,0.7811,CAT-0974,0.7788
+2026-05-22T12:42:23.374Z,M8,,,m8,,,,,,CAT-0221,0.8464,0.0724,CAT-1000,0.8464,CAT-0550,0.8425
+2026-05-22T12:42:32.022Z,lock washer 5/8,lock washer,,5/8,,,,,,CAT-0839,0.5793,0.1472,CAT-0790,0.5549,CAT-0929,0.5549
+2026-05-22T12:45:28.149Z,"Dorman Hex Nut-JIS-Class 8-Thread Size M10-1.25, Height 14mm",hex nut,,m10,14mm,,class 8,,iso 7380,CAT-0373,0.6372,0.6903,CAT-0805,0.6306,CAT-0321,0.6194
+2026-05-22T12:46:33.010Z,"""#10-24 x 1/2 threaded rod""",threaded rod,,#10-24,"1/2""",,,,,CAT-0215,0.8770,0.4159,CAT-0930,0.8770,CAT-0433,0.7097
+2026-05-22T13:17:58.753Z,m5-0.8 x 80mm button soc cap screw iso 7380 alloy zinc,button socket cap screw,,m5-0.8,80mm,alloy,,zinc,iso 7380,CAT-0861,0.6103,0.7073,CAT-0587,0.6087,CAT-0441,0.5501
+2026-05-22T13:18:00.315Z,m8 flat washer,flat washer,,m8,,,,,,CAT-0688,0.7679,0.1724,CAT-0016,0.7530,CAT-0624,0.7468
+2026-05-22T13:22:18.170Z,M8 flat washer,flat washer,,m8,,,,,,CAT-0624,0.7816,0.1726,CAT-0016,0.7811,CAT-0974,0.7788
+2026-05-22T13:29:43.742Z,m12-1.75 hex nut class 8 steel zinc,hex nut,,m12,,steel,class 8,zinc,,CAT-0005,0.8276,0.8711,CAT-0051,0.6882,CAT-0632,0.6854
+2026-05-22T13:35:08.416Z,5/8-11 x 6ft soc head cap screw ifi 111 316 ss black oxide,socket head cap screw,,5/8-11,6ft,,316 ss,black oxide,ifi 111,CAT-0846,0.8098,0.9232,CAT-0464,0.6432,CAT-0450,0.6405
+2026-05-22T13:39:55.632Z,m8 flat washer,flat washer,m8,,,,,,CAT-0688,0.7679,0.1724,CAT-0016,0.7530,CAT-0624,0.7468
+2026-05-22T13:40:15.053Z,M8 x 50mm BHCS alloy black oxide,button socket cap screw,m8,50mm,alloy,,black oxide,,CAT-0100,0.7265,0.8185,CAT-0859,0.5789,CAT-0651,0.5743
+2026-05-22T13:40:45.975Z,give me my most purchased product,,,,,,,,CAT-0671,0.1814,0.0000,CAT-0487,0.1803,CAT-0582,0.1803
+2026-05-22T13:43:12.482Z,M8 x 50mm BHCS alloy black oxide,button socket cap screw,m8,50mm,alloy,,black oxide,,CAT-0100,0.7265,0.8185,CAT-0859,0.5789,CAT-0651,0.5743
+2026-05-22T13:44:10.132Z,m8-1.25 flat washer iso 7380 18-8 ss plain,flat washer,m8,,stainless steel,18-8 ss,plain,iso 7380,CAT-0688,0.8538,0.9399,CAT-0111,0.7038,CAT-0974,0.6583
+2026-05-22T13:45:45.612Z,"1/2-13 x 4"" threaded rod iso 7380 alloy mech zn",,1/2-13,"4""",alloy,,mechanical zinc,iso 7380,CAT-0401,0.8580,0.8873,CAT-0607,0.7194,CAT-0889,0.6930
+2026-05-22T13:48:09.170Z,7/16-14 lock washer asme b18.2.1 316 ss mech zinc,,7/16-14,,stainless steel,316 ss,mechanical zinc,asme b18.2.1,CAT-0790,1.0000,0.9000,CAT-0929,1.0000,CAT-0122,0.7329
+2026-05-22T13:53:01.839Z,m8-1.25 flat washer iso 7380 18-8 ss plain,flat washer,m8,,stainless steel,18-8 ss,plain,iso 7380,CAT-0688,0.8538,0.9399,CAT-0111,0.7038,CAT-0974,0.6583
+2026-05-22T13:55:42.490Z,M8 washers,flat washer,m8,,,,,,CAT-0688,0.7637,0.1705,CAT-0624,0.7607,CAT-0619,0.7599
+2026-05-22T13:56:17.897Z,7/16-14 lock washer asme b18.2.1 316 ss mech zinc,,7/16-14,,stainless steel,316 ss,mechanical zinc,asme b18.2.1,CAT-0790,1.0000,0.9000,CAT-0929,1.0000,CAT-0122,0.7329
+2026-05-22T13:56:50.358Z,m12-1.75 hex nut class 8 steel zinc,hex nut,m12,,steel,class 8,zinc,,CAT-0005,0.8276,0.8711,CAT-0051,0.6882,CAT-0632,0.6854
+2026-05-22T13:59:41.383Z,M8 x 50mm BHCS alloy black oxide,button socket cap screw,m8,50mm,alloy,,black oxide,,CAT-0100,0.7265,0.8185,CAT-0859,0.5789,CAT-0651,0.5743
+2026-05-22T14:06:30.473Z,6ft rod steel,threaded rod,1/4-20,6ft,steel,,,,CAT-0188,0.6570,0.5098,CAT-0793,0.6451,CAT-0740,0.6150
+2026-05-22T14:11:12.786Z,6ft rod steel,threaded rod,,6ft,steel,,,,CAT-0002,0.7528,0.3810,CAT-0043,0.7471,CAT-0715,0.6211
+2026-05-22T14:12:28.114Z,"X 3/8"" LAG SCREW",lag screw,3/8-11,"3/8""",,,,,CAT-0087,0.7082,0.3695,CAT-0271,0.6943,CAT-0144,0.6728
+2026-05-22T14:13:20.814Z,THREADED ROD,,,,,,,,CAT-0509,0.2908,0.0000,CAT-0434,0.2861,CAT-0462,0.2861
+2026-05-22T14:14:05.229Z,THREADED ROD,,,,,,,,CAT-0509,0.2908,0.0000,CAT-0434,0.2861,CAT-0462,0.2861
+2026-05-22T14:18:34.722Z,THREADED ROD,,,,,,,,CAT-0509,0.2908,0.0000,CAT-0434,0.2861,CAT-0462,0.2861
+2026-05-22T14:19:46.299Z,THREADED ROD DIN 912 ALLOY,,,,alloy,,,din 912,CAT-0977,0.9695,0.1993,CAT-0760,0.9401,CAT-0884,0.9397
+2026-05-22T14:20:39.840Z,THREADED ROD DIN 912 ALLOY,,,,alloy,,,din 912,CAT-0164,1.0000,0.2030,CAT-0977,0.9695,CAT-0760,0.9401
+2026-05-22T14:23:59.964Z,THREADED ROD DIN 912 ALLOY,,,,alloy,,,din 912,CAT-0164,1.0000,0.2030,CAT-0977,0.9695,CAT-0760,0.9401
+2026-05-22T14:29:31.865Z,M8 x 50mm BHCS alloy black oxide,button socket cap screw,m8,50mm,alloy,,black oxide,,CAT-0100,0.7265,0.8185,CAT-0859,0.5789,CAT-0651,0.5743
+2026-05-22T14:39:03.446Z,M8 x 50mm BHCS alloy black oxide,button socket cap screw,m8,50mm,alloy,,black oxide,,CAT-0100,0.7932,0.8890,CAT-0859,0.5789,CAT-0651,0.5743
+2026-05-22T14:39:40.564Z,M8,,m8,,,,,,CAT-0221,0.8464,0.0724,CAT-1000,0.8464,CAT-0550,0.8425
+2026-05-22T14:54:46.708Z,m5-0.8 x 30mm threaded rod din 933 brass mech zinc,,m5-0.8,30mm,brass,,mech zinc,din 933,CAT-0436,0.5902,0.6592,CAT-0727,0.5843,CAT-0561,0.5816

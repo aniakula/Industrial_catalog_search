@@ -13,17 +13,36 @@ function getClient(): Ollama {
 }
 
 /**
- * Call the extraction LLM and return its raw text response.
- * `format: "json"` forces the model to produce valid JSON.
+ * Generic JSON-mode chat with separate system/user roles.
+ * `num_ctx` defaults large enough for small prompts; bump it for big dumps
+ * like catalog or order history (otherwise Ollama silently truncates).
  */
-export async function extractJSON(prompt: string): Promise<string> {
+export async function chatJSON(
+  systemPrompt: string,
+  userContent: string,
+  opts: { num_ctx?: number; temperature?: number } = {},
+): Promise<string> {
   const response = await getClient().chat({
-    model:    EXTRACTION_MODEL,
-    messages: [{ role: "user", content: prompt }],
-    format:   "json",
-    options:  { temperature: 0 },
+    model: EXTRACTION_MODEL,
+    messages: [
+      { role: "system", content: systemPrompt },
+      { role: "user",   content: userContent  },
+    ],
+    format: "json",
+    keep_alive: "30m",
+    options: {
+      temperature: opts.temperature ?? 0,
+      num_ctx:     opts.num_ctx     ?? 4096,
+    },
   });
   return response.message.content;
+}
+
+/**
+ * Backwards-compatible wrapper for attribute extraction.
+ */
+export async function extractJSON(systemPrompt: string, userContent: string): Promise<string> {
+  return chatJSON(systemPrompt, userContent);
 }
 
 /**
@@ -37,13 +56,3 @@ export async function getEmbedding(text: string): Promise<number[]> {
   return response.embeddings[0] ?? [];
 }
 
-/**
- * Embed multiple texts in a single call. Returns an array of 768-dim vectors.
- */
-export async function getEmbeddingsBatch(texts: string[]): Promise<number[][]> {
-  const response = await getClient().embed({
-    model: EMBEDDING_MODEL,
-    input: texts,
-  });
-  return response.embeddings ?? [];
-}

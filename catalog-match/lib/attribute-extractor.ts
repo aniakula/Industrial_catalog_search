@@ -6,11 +6,10 @@ const SYSTEM_PROMPT = `You are a highly specialized industrial fastener classifi
 Your job is to extract structured attributes from a fastener/hardware product description. The description may be a catalog entry, a customer query, or shorthand industry notation.
 
 ## Output Format
-You MUST return valid JSON with exactly these 8 keys. Use null for any attribute not present or inferable.
+You MUST return valid JSON with exactly these 7 keys. Use null for any attribute not present or inferable.
 
 {
   "fastener_type": string | null,
-  "drive_type": string | null,
   "thread_size": string | null,
   "length": string | null,
   "material": string | null,
@@ -24,29 +23,27 @@ You MUST return valid JSON with exactly these 8 keys. Use null for any attribute
 ## Attribute Definitions & Rules
 
 ### fastener_type
-The fundamental category of the hardware item. Normalize to one of:
-- "hex cap screw" (also: hex bolt, HHB, hex head bolt, HX CAP SCR)
-- "socket head cap screw" (also: SHCS, SOC HEAD CAP SCR, socket cap)
-- "button socket cap screw" (also: BHCS, BTN SOCKET CAP, button head cap screw, BTN SOC CAP SCR)
-- "lag screw" (also: LAG SCR, lag bolt)
-- "hex nut" (also: HEX NUT, HX NUT, nut)
-- "flat washer" (also: FLAT WSHR, WASH, flat wash)
-- "lock washer" (also: LOCK WSHR, LOCK WASH, spring washer)
-- "threaded rod" (also: THREAD ROD, ALL THREAD, FULL THREAD ROD, ROD)
-- "tap bolt" (also: TAP BOLT, tap screw)
-- "phillips pan machine screw" (also: PHILLIPS PAN MACH SCR, PAN HEAD MACH SCR, PAN MACH SCR)
-- "carriage bolt" (if mentioned)
-- "set screw" (if mentioned)
-Return null if the type cannot be determined.
+The fundamental category of the hardware item.
+You MUST choose exactly one value from the list below, or return null if the description contains no recognizable fastener type.
+Do NOT invent values outside this list.
 
-### drive_type
-The head style or drive recess type. Normalize to one of:
-- "hex" (for external hex head: hex cap screw, hex bolt, hex nut)
-- "socket" (for internal hex/allen drive: socket head cap screws, SHCS)
-- "button socket" (for button head with socket drive: BHCS, button socket cap)
-- "phillips" (for phillips cross drive)
-- "slotted" (for single slot drive)
-Return null if not specified or not applicable (e.g. washers, nuts, rods have no drive type).
+Allowed values and their aliases:
+- "hex cap screw"               → hex bolt, HHB, hex head bolt, HX CAP SCR, HX HD CAP SCR
+- "socket head cap screw"       → SHCS, SOC HEAD CAP SCR, socket cap screw, SOC HD CAP SCR
+- "button socket cap screw"     → BHCS, BTN SOCKET CAP, button head cap screw, BTN SOC CAP SCR, BTN HD
+- "tap bolt"                    → TAP BOLT, tap screw, full thread hex bolt
+- "phillips pan machine screw"  → PHILLIPS PAN MACH SCR, PAN HEAD MACH SCR, PAN MACH SCR, PAN HD MACH SCR
+- "lag screw"                   → LAG SCR, lag bolt, LAG
+- "hex nut"                     → HEX NUT, HX NUT, nut, NUT
+- "flat washer"                 → FLAT WSHR, FLAT WASH, WASH, WSHR, washer (when not a lock washer)
+- "lock washer"                 → LOCK WSHR, LOCK WASH, spring washer, split washer
+- "threaded rod"                → THREAD ROD, ALL THREAD, FULL THREAD ROD, ALL-THREAD ROD, ROD
+- "carriage bolt"               → carriage bolt, CARR BOLT
+- "set screw"                   → set screw, SET SCR, grub screw
+
+Return null ONLY if none of the above types can be identified from the description. 
+Note that the given abbreviations are not comprehensive. 
+Make the best guess of the above 12 options given the description or null if not enough information is provided.
 
 ### thread_size
 The thread designation ONLY. Do NOT include length, pitch class, or tolerance.
@@ -112,16 +109,18 @@ Return null if not specified.
 
 ## Common Abbreviation Reference
 SHCS = socket head cap screw
-BHCS = button head cap screw (button socket cap screw)
-HHB = hex head bolt
-HX = hex
-SOC = socket
-BTN = button
+BHCS / BTN HD = button socket cap screw
+HHB / HX HD = hex head bolt = hex cap screw
 MACH SCR = machine screw
-PAN = pan head
-WSHR / WASH = washer
-NUT = nut
-ROD = threaded rod
+PAN / PAN HD = pan head
+WSHR / WASH = washer → "flat washer" unless "lock" is also present
+LOCK WSHR / LOCK WASH = lock washer
+NUT / HX NUT = hex nut
+ROD / ALL THREAD / FULL THREAD ROD = threaded rod
+LAG / LAG SCR = lag screw
+TAP BOLT = tap bolt
+CARR BOLT = carriage bolt
+SET SCR / GRUB SCR = set screw
 SS = stainless steel
 HDG = hot dip galvanized
 YZ / YZN = yellow zinc
@@ -132,17 +131,45 @@ PL / PLAIN = plain (no finish)
 
 ---
 
-Now extract attributes from the following description and return ONLY valid JSON, nothing else:`;
+## Examples
+
+Input: "M8 flat washer"
+Output: {"fastener_type":"flat washer","thread_size":"m8","length":null,"material":null,"grade":null,"finish":null,"standard":null}
+
+Input: "1/2-13 hex nut steel zinc"
+Output: {"fastener_type":"hex nut","thread_size":"1/2-13","length":null,"material":"steel","grade":null,"finish":"zinc","standard":null}
+
+Input: "3/8-16 x 1 socket head cap screw 18-8 ss"
+Output: {"fastener_type":"socket head cap screw","thread_size":"3/8-16","length":"1\"","material":"stainless steel","grade":"18-8 ss","finish":null,"standard":null}
+
+Input: "5/8-11 lock washer black oxide alloy"
+Output: {"fastener_type":"lock washer","thread_size":"5/8-11","length":null,"material":"alloy","grade":null,"finish":"black oxide","standard":null}
+
+Input: "1/4-20 x 6ft threaded rod steel plain"
+Output: {"fastener_type":"threaded rod","thread_size":"1/4-20","length":"6ft","material":"steel","grade":null,"finish":"plain","standard":null}
+
+---
+
+Now extract attributes from the description the user provides. 
+DO NOT hallucinate any attributes, if the user did not provide an attribute or something similar to an attribute do not include it
+ex: "6ft rod steel " should have a 6ft length attribute but no thread attribute since there is no reasonable thread size to extract from the description  
+Return ONLY valid JSON, nothing else.`;
 
 export async function extractAttributes(description: string): Promise<PartAttributes> {
-  const prompt = `${SYSTEM_PROMPT}\n\n"${description}"`;
-  const raw    = await extractJSON(prompt);
+  const raw    = await extractJSON(SYSTEM_PROMPT, description);
   const parsed = JSON.parse(raw.trim()) as PartAttributes;
+
+  // Normalize thread_size: strip erroneous "#" prefix from fractional sizes
+  // e.g. "#3/4-10" → "3/4-10". Gauge sizes like "#8-32" never contain "/" so
+  // they are left untouched.
+  const rawThread = parsed.thread_size?.toLowerCase() ?? null;
+  const thread_size = rawThread?.startsWith("#") && rawThread.includes("/")
+    ? rawThread.slice(1)
+    : rawThread;
 
   return {
     fastener_type: parsed.fastener_type?.toLowerCase() ?? null,
-    drive_type:    parsed.drive_type?.toLowerCase()    ?? null,
-    thread_size:   parsed.thread_size?.toLowerCase()   ?? null,
+    thread_size,
     length:        parsed.length?.toLowerCase()        ?? null,
     material:      parsed.material?.toLowerCase()      ?? null,
     grade:         parsed.grade?.toLowerCase()         ?? null,

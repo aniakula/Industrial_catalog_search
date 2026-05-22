@@ -1,6 +1,5 @@
 export interface PartAttributes {
   fastener_type: string | null;
-  drive_type:    string | null;
   thread_size:   string | null;
   length:        string | null;
   material:      string | null;
@@ -27,6 +26,7 @@ export interface SearchResult {
   attr_score:      number;
   embedding_score: number;
   confidence:      number; // 0–1, independent signal for display
+  history_boosted?: boolean;
 }
 
 export interface SearchRequest {
@@ -35,8 +35,15 @@ export interface SearchRequest {
 }
 
 export interface SearchResponse {
-  results:         SearchResult[];
-  query_attributes: PartAttributes;
+  results:           SearchResult[];
+  query_attributes:  PartAttributes;
+  routing?: {
+    classification:     "normal_search" | "action_catalog" | "action_history";
+    original_query:     string;
+    resolved_query:     string;
+    selected_catalog_id?: string;
+    reason?:            string;
+  };
 }
 
 export interface Customer {

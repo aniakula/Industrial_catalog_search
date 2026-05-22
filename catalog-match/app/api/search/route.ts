@@ -4,16 +4,18 @@ import path from "path";
 import { supabase } from "@/lib/supabase";
 import { extractAttributes } from "@/lib/attribute-extractor";
 import { getEmbedding } from "@/lib/ollama";
-import { rankParts } from "@/lib/matcher";
-import type { CatalogPart, PartAttributes, SearchRequest, SearchResponse } from "@/lib/types";
+import { rankParts, recomputeConfidence } from "@/lib/matcher";
+import { routeQuery } from "@/lib/query-router";
+import type { CatalogPart, PartAttributes, SearchRequest, SearchResponse, SearchResult } from "@/lib/types";
 
 const CSV_PATH = path.join(process.cwd(), "..", "query_tests.csv");
+const HISTORY_BOOST_MAX = 0.25; // max +25% score lift for most recent matching part
+const HISTORY_BOOST_TOP_N = 20;
 
 const CSV_HEADERS = [
   "timestamp",
   "query",
   "fastener_type",
-  "drive_type",
   "thread_size",
   "length",
   "material",
@@ -70,7 +72,6 @@ function logAndRecord(
     new Date().toISOString(),
     escapeCSV(query),
     escapeCSV(attrs.fastener_type),
-    escapeCSV(attrs.drive_type),
     escapeCSV(attrs.thread_size),
     escapeCSV(attrs.length),
     escapeCSV(attrs.material),
@@ -89,25 +90,115 @@ function logAndRecord(
   fs.appendFileSync(CSV_PATH, row.join(",") + "\n", "utf8");
 }
 
+async function fetchRecentCustomerSkuWeights(customerId: string): Promise<{
+  skuWeight: Map<string, number>;
+  historyDepthFactor: number;
+  recentCount: number;
+}> {
+  const { data, error } = await supabase
+    .from("order_history")
+    .select("sku, order_date")
+    .eq("customer_id", customerId)
+    .order("order_date", { ascending: false })
+    .limit(10);
+
+  if (error || !data) {
+    return { skuWeight: new Map<string, number>(), historyDepthFactor: 0, recentCount: 0 };
+  }
+
+  const recentCount = data.length;
+  const historyDepthFactor = Math.min(recentCount / 10, 1);
+  const skuWeight = new Map<string, number>();
+
+  data.forEach((row, idx) => {
+    // Most recent row gets 1.0, tenth gets 0.1
+    const recencyWeight = (10 - idx) / 10;
+    const prev = skuWeight.get(row.sku) ?? 0;
+    if (recencyWeight > prev) skuWeight.set(row.sku, recencyWeight);
+  });
+
+  return { skuWeight, historyDepthFactor, recentCount };
+}
+
+function applyRecentHistoryBoost(
+  ranked: SearchResult[],
+  skuWeight: Map<string, number>,
+  historyDepthFactor: number,
+): SearchResult[] {
+  if (skuWeight.size === 0 || historyDepthFactor <= 0) return ranked;
+
+  const boosted = ranked.map((r) => ({ ...r }));
+  const topN = Math.min(HISTORY_BOOST_TOP_N, boosted.length);
+  let boostedCount = 0;
+
+  for (let i = 0; i < topN; i++) {
+    const recencyWeight = skuWeight.get(boosted[i].sku);
+    if (!recencyWeight) continue;
+    const before = boosted[i].final_score;
+    const multiplier = 1 + HISTORY_BOOST_MAX * historyDepthFactor * recencyWeight;
+    boosted[i].final_score = Math.min(boosted[i].final_score * multiplier, 1);
+    boosted[i].history_boosted = true;
+    const after = boosted[i].final_score;
+    console.log(
+      `[history_boost] ${boosted[i].catalog_id} (${boosted[i].sku}) ` +
+      `${before.toFixed(4)} -> ${after.toFixed(4)} ` +
+      `(x${multiplier.toFixed(3)}, recency=${recencyWeight.toFixed(2)})`,
+    );
+    boostedCount++;
+  }
+
+  const reSorted = boosted.sort((a, b) => b.final_score - a.final_score);
+  if (boostedCount > 0) {
+    console.log(
+      `[history_boost] boosted=${boostedCount} topN=${topN} depth_factor=${historyDepthFactor.toFixed(2)}`,
+    );
+  }
+  return reSorted;
+}
+
 export async function POST(req: NextRequest) {
   try {
+    const tRequest0 = Date.now();
     const body: SearchRequest = await req.json();
-    const { query } = body;
+    const { query, customer_id } = body;
 
     if (!query?.trim()) {
       return NextResponse.json({ error: "Query is required" }, { status: 400 });
     }
 
-    // Step 1: Extract structured attributes from the query
-    const queryAttributes = await extractAttributes(query);
+    // Step 0: Route the query — classify and (if needed) resolve to a catalog
+    // description before running the matcher pipeline.
+    const tRoute0 = Date.now();
+    const routed = await routeQuery(query, customer_id, supabase);
+    const tRoute1 = Date.now();
+    const effectiveQuery = routed.resolvedQuery;
 
-    // Step 2: Generate embedding for the query
-    const queryEmbedding = await getEmbedding(query);
+    if (routed.originalQuery !== routed.resolvedQuery) {
+      console.log(`[router] original: "${routed.originalQuery}"`);
+      console.log(`[router] resolved: "${routed.resolvedQuery}"  (${routed.selectedCatalogId ?? "-"})`);
+    }
+    if (routed.reason) console.log(`[router] note: ${routed.reason}`);
+    console.log(`[timing] router ${tRoute1 - tRoute0}ms`);
+
+    // Step 1: Extract structured attributes from the (possibly resolved) query
+    const tExtract0 = Date.now();
+    const queryAttributes = await extractAttributes(effectiveQuery);
+    const tExtract1 = Date.now();
+    console.log(`[timing] extract ${tExtract1 - tExtract0}ms`);
+
+    // Step 2: Generate embedding for the (possibly resolved) query
+    const tEmbed0 = Date.now();
+    const queryEmbedding = await getEmbedding(effectiveQuery);
+    const tEmbed1 = Date.now();
+    console.log(`[timing] embed ${tEmbed1 - tEmbed0}ms`);
 
     // Step 3: Fetch all catalog parts from Supabase
+    const tFetch0 = Date.now();
     const { data: parts, error } = await supabase
       .from("catalog_parts")
       .select("*");
+    const tFetch1 = Date.now();
+    console.log(`[timing] fetch ${tFetch1 - tFetch0}ms (${parts?.length ?? 0} rows)`);
 
     if (error) {
       console.error("Supabase error:", error);
@@ -117,16 +208,41 @@ export async function POST(req: NextRequest) {
     const catalogParts = (parts ?? []) as CatalogPart[];
 
     // Step 4: Rank all parts using combined attribute + embedding score
-    const ranked = rankParts(catalogParts, queryAttributes, queryEmbedding);
+    const tRank0 = Date.now();
+    let ranked = rankParts(catalogParts, queryAttributes, queryEmbedding);
+
+    // Step 5 (optional): for non-history queries, personalize with recent
+    // customer order history if a customer was selected.
+    if (customer_id && routed.classification !== "action_history") {
+      const tHistory0 = Date.now();
+      const { skuWeight, historyDepthFactor, recentCount } = await fetchRecentCustomerSkuWeights(customer_id);
+      ranked = applyRecentHistoryBoost(ranked, skuWeight, historyDepthFactor);
+      ranked = recomputeConfidence(ranked, queryAttributes);
+      const tHistory1 = Date.now();
+      console.log(
+        `[timing] history_boost ${tHistory1 - tHistory0}ms (recent_orders=${recentCount})`,
+      );
+    }
+
+    const tRank1 = Date.now();
+    console.log(`[timing] rank ${tRank1 - tRank0}ms`);
 
     const top3 = ranked.slice(0, 3);
 
     // Log attributes to console and persist to query_tests.csv
-    logAndRecord(query, queryAttributes, top3);
+    logAndRecord(effectiveQuery, queryAttributes, top3);
+    console.log(`[timing] total ${Date.now() - tRequest0}ms`);
 
     const response: SearchResponse = {
-      results: top3,
+      results:          top3,
       query_attributes: queryAttributes,
+      routing: {
+        classification:      routed.classification,
+        original_query:      routed.originalQuery,
+        resolved_query:      routed.resolvedQuery,
+        selected_catalog_id: routed.selectedCatalogId,
+        reason:              routed.reason,
+      },
     };
 
     return NextResponse.json(response);

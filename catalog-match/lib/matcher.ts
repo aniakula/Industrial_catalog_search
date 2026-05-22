@@ -1,4 +1,4 @@
-import { ATTRIBUTE_WEIGHTS, W_ATTR, W_EMBED, CONFIDENCE_WEIGHTS } from "./weights";
+import { ATTRIBUTE_WEIGHTS, W_ATTR, W_EMBED, CONFIDENCE_WEIGHTS, QUERY_COVERAGE_SCORES } from "./weights";
 import type { CatalogPart, PartAttributes, SearchResult } from "./types";
 
 export function cosineSimilarity(a: number[], b: number[]): number {
@@ -52,7 +52,6 @@ export function rankParts(
   const results: SearchResult[] = parts.map((part) => {
     const partAttrs: PartAttributes = {
       fastener_type: part.fastener_type,
-      drive_type:    part.drive_type,
       thread_size:   part.thread_size,
       length:        part.length,
       material:      part.material,
@@ -78,35 +77,44 @@ export function rankParts(
       embedding_score,
       final_score,
       confidence:      0, // placeholder — computed after sorting below
+      history_boosted: false,
     };
   });
 
-  const sorted = results.sort((a, b) => b.final_score - a.final_score);
+  const sorted = [...results].sort((a, b) => b.final_score - a.final_score);
+  return recomputeConfidence(sorted, queryAttrs);
+}
 
+export function recomputeConfidence(
+  rankedByScore: SearchResult[],
+  queryAttrs: PartAttributes,
+): SearchResult[] {
   // Compute confidence scores now that we have the ranked order
   const nonNullQueryAttrs = Object.values(queryAttrs).filter((v) => v !== null).length;
-  const queryCoverage     = nonNullQueryAttrs / Object.keys(queryAttrs).length;
-  const top               = sorted[0];
-  const second            = sorted[1];
+  const queryCoverage     = QUERY_COVERAGE_SCORES[nonNullQueryAttrs] ?? 0;
 
-  const topScore    = top?.final_score ?? 0;
-  const secondScore = second?.final_score ?? 0;
-  const rawMargin   = topScore > 0 ? (topScore - secondScore) / topScore : 1;
-  // Cap margin contribution — a 50% gap already means very clear winner
-  const margin      = Math.min(rawMargin * 2, 1);
+  // Per-rank margin: each entry is compared to the next entry below it.
+  // Rank #1 → gap vs rank #2, rank #2 → gap vs rank #3.
+  const TOP_N_MARGINS = 3;
+  const perRankMargin: number[] = Array.from({ length: TOP_N_MARGINS }, (_, i) => {
+    const thisScore = rankedByScore[i]?.final_score   ?? 0;
+    const nextScore = rankedByScore[i + 1]?.final_score ?? 0;
+    const raw       = thisScore > 0 ? (thisScore - nextScore) / thisScore : 1;
+    return Math.min(raw * 2, 1); // cap: a 50% gap already signals a clear winner
+  });
 
-  return sorted.map((result, i) => {
-    // Only the top result gets a meaningful confidence — lower ranks are
-    // inherently less certain, so decay confidence by rank position
-    const rankDecay = 1 / (i + 1);
+  return rankedByScore.map((result, i) => {
+    // Use the per-rank margin when available; fall back to the last computed
+    // margin for any results beyond TOP_N_MARGINS.
+    const margin = perRankMargin[Math.min(i, TOP_N_MARGINS - 1)];
 
-    const confidence = Math.min(
-      CONFIDENCE_WEIGHTS.query_coverage * queryCoverage +
-      CONFIDENCE_WEIGHTS.top_score      * result.final_score +
-      CONFIDENCE_WEIGHTS.score_margin   * margin * rankDecay +
-      CONFIDENCE_WEIGHTS.attr_hit_rate  * result.attr_score,
-      1
-    );
+    // queryCoverage is a multiplier — a vague query gates the whole score down
+    // no matter how strong the embedding match is.
+    // score_power < 1 amplifies mid-range final_scores without capping perfect ones.
+    // margin_bonus adds a proportional lift for results with a large lead over #next.
+    const amplified  = Math.pow(result.final_score, CONFIDENCE_WEIGHTS.score_power);
+    const inner      = amplified * (1 + CONFIDENCE_WEIGHTS.margin_bonus * margin);
+    const confidence = Math.min(queryCoverage * inner, 1);
 
     return { ...result, confidence };
   });
