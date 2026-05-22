@@ -160,7 +160,7 @@ export async function POST(req: NextRequest) {
   try {
     const tRequest0 = Date.now();
     const body: SearchRequest = await req.json();
-    const { query, customer_id } = body;
+    const { query, customer_id, allow_history_without_customer } = body;
 
     if (!query?.trim()) {
       return NextResponse.json({ error: "Query is required" }, { status: 400 });
@@ -169,9 +169,26 @@ export async function POST(req: NextRequest) {
     // Step 0: Route the query — classify and (if needed) resolve to a catalog
     // description before running the matcher pipeline.
     const tRoute0 = Date.now();
-    const routed = await routeQuery(query, customer_id, supabase);
+    const routed = await routeQuery(query, customer_id, !!allow_history_without_customer, supabase);
     const tRoute1 = Date.now();
     const effectiveQuery = routed.resolvedQuery;
+
+    if (routed.requires_customer_confirmation) {
+      return NextResponse.json(
+        {
+          error: "Customer-history query detected with no customer selected.",
+          requires_customer_confirmation: true,
+          routing: {
+            classification: "action_history",
+            original_query: routed.originalQuery,
+            resolved_query: routed.resolvedQuery,
+            reason: routed.reason,
+            requires_customer_confirmation: true,
+          },
+        },
+        { status: 409 },
+      );
+    }
 
     if (routed.originalQuery !== routed.resolvedQuery) {
       console.log(`[router] original: "${routed.originalQuery}"`);
@@ -227,7 +244,12 @@ export async function POST(req: NextRequest) {
     const tRank1 = Date.now();
     console.log(`[timing] rank ${tRank1 - tRank0}ms`);
 
-    const top3 = ranked.slice(0, 3);
+    const top3 = [...ranked]
+      .sort((a, b) => {
+        if (b.final_score !== a.final_score) return b.final_score - a.final_score;
+        return b.confidence - a.confidence;
+      })
+      .slice(0, 3);
 
     // Log attributes to console and persist to query_tests.csv
     logAndRecord(effectiveQuery, queryAttributes, top3);
@@ -242,6 +264,7 @@ export async function POST(req: NextRequest) {
         resolved_query:      routed.resolvedQuery,
         selected_catalog_id: routed.selectedCatalogId,
         reason:              routed.reason,
+        requires_customer_confirmation: routed.requires_customer_confirmation,
       },
     };
 

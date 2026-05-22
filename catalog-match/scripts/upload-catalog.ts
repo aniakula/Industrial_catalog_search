@@ -20,13 +20,13 @@ const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
 );
 
-const CATALOG_PROCESSED = path.join(__dirname, "../../catalog_processed_v4.csv");
+const CATALOG_PROCESSED = path.join(__dirname, "../../catalog_processed_v5.csv");
 const ORDER_HISTORY     = path.join(__dirname, "../../order_history.csv");
 
 const BATCH_SIZE = 50;
 
 async function uploadCatalog() {
-  console.log("Reading catalog_processed_v4.csv...");
+  console.log("Reading catalog_processed_v5.csv...");
   const raw  = fs.readFileSync(CATALOG_PROCESSED, "utf-8");
   const rows = parse(raw, { columns: true, skip_empty_lines: true });
 
@@ -73,9 +73,19 @@ async function uploadOrderHistory() {
     customer_name: r.customer_name,
     order_date:    r.order_date,
     sku:           r.sku,
-    description:   r.catalog_description.toLowerCase(),
+    description:   r.catalog_description,
     quantity:      parseInt(r.quantity, 10),
   }));
+
+  console.log("Clearing existing order_history rows...");
+  const { error: deleteError } = await supabase
+    .from("order_history")
+    .delete()
+    .gt("id", 0);
+  if (deleteError) {
+    console.error("Order history delete error:", deleteError);
+    process.exit(1);
+  }
 
   console.log(`Uploading ${orders.length} order history rows...`);
 
@@ -89,10 +99,7 @@ async function uploadOrderHistory() {
 }
 
 async function main() {
-  await uploadCatalog();
-  // Order history is already in Supabase — skip re-upload to avoid duplicates.
-  // Uncomment the line below if you ever need to reload it from scratch.
-  // await uploadOrderHistory();
+  await uploadOrderHistory();
   console.log("\nAll uploads complete.");
 }
 

@@ -30,8 +30,9 @@ export interface SearchResult {
 }
 
 export interface SearchRequest {
-  query:       string;
+  query: string;
   customer_id?: string;
+  allow_history_without_customer?: boolean;
 }
 
 export interface SearchResponse {
@@ -43,6 +44,7 @@ export interface SearchResponse {
     resolved_query:     string;
     selected_catalog_id?: string;
     reason?:            string;
+    requires_customer_confirmation?: boolean;
   };
 }
 

@@ -96,6 +96,44 @@ export default function Home() {
   const modePreview = useMemo(() => detectModePreview(query), [query]);
   const statusMessage = useMemo(() => getStatusMessage(modePreview, elapsedMs), [modePreview, elapsedMs]);
 
+  async function runSearch(allowHistoryWithoutCustomer: boolean, started: number): Promise<void> {
+    const res = await fetch("/api/search", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        query: query.trim(),
+        customer_id: customerId || undefined,
+        allow_history_without_customer: allowHistoryWithoutCustomer || undefined,
+      }),
+    });
+
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      if (err?.requires_customer_confirmation) {
+        const proceed = window.confirm(
+          "A customer-history related query was detected, but no customer ID is selected.\n\n" +
+          "Press OK to continue using the query text directly, or Cancel to stop the query.",
+        );
+        if (!proceed) return;
+        await runSearch(true, started);
+        return;
+      }
+      throw new Error(err.error ?? "Search failed");
+    }
+
+    const data: SearchResponse = await res.json();
+    setResponse(data);
+    const duration = Date.now() - started;
+    setLastDurationMs(duration);
+    if (data.routing?.classification === "action_history") {
+      setLastFinalStatus("Customer history query detected.");
+    } else if (data.routing?.classification === "action_catalog") {
+      setLastFinalStatus("Action query detected.");
+    } else {
+      setLastFinalStatus("Catalog query detected.");
+    }
+  }
+
   async function handleSearch(e: React.FormEvent) {
     e.preventDefault();
     if (!query.trim()) return;
@@ -110,28 +148,7 @@ export default function Home() {
     setResponse(null);
 
     try {
-      const res = await fetch("/api/search", {
-        method:  "POST",
-        headers: { "Content-Type": "application/json" },
-        body:    JSON.stringify({ query: query.trim(), customer_id: customerId || undefined }),
-      });
-
-      if (!res.ok) {
-        const err = await res.json();
-        throw new Error(err.error ?? "Search failed");
-      }
-
-      const data: SearchResponse = await res.json();
-      setResponse(data);
-      const duration = Date.now() - started;
-      setLastDurationMs(duration);
-      if (data.routing?.classification === "action_history") {
-        setLastFinalStatus("Customer history query detected.");
-      } else if (data.routing?.classification === "action_catalog") {
-        setLastFinalStatus("Action query detected.");
-      } else {
-        setLastFinalStatus("Catalog query detected.");
-      }
+      await runSearch(false, started);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Something went wrong");
     } finally {
@@ -261,6 +278,30 @@ export default function Home() {
                 {lastDurationMs !== null && (
                   <p className="text-xs text-slate-500 mt-1">
                     Completed in {formatElapsed(lastDurationMs)}
+                  </p>
+                )}
+              </div>
+            )}
+
+            {response.routing && (
+              <div className="mb-4 px-4 py-3 bg-white rounded-xl border border-slate-200">
+                <p className="text-xs text-slate-400 font-medium uppercase tracking-wide mb-1">
+                  Query Used For Matching
+                </p>
+                {response.routing.classification !== "normal_search" &&
+                  response.routing.original_query !== response.routing.resolved_query && (
+                    <p className="text-xs text-slate-500 mb-1">
+                      Original: <span className="font-mono text-slate-700">{response.routing.original_query}</span>
+                    </p>
+                  )}
+                <p className="text-sm text-slate-700">
+                  <span className="font-medium">Used:</span>{" "}
+                  <span className="font-mono">{response.routing.resolved_query}</span>
+                </p>
+                {response.routing.selected_catalog_id && (
+                  <p className="text-xs text-slate-500 mt-1">
+                    Resolved catalog item:{" "}
+                    <span className="font-mono text-slate-700">{response.routing.selected_catalog_id}</span>
                   </p>
                 )}
               </div>

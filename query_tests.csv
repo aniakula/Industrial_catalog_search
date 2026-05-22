@@ -58,3 +58,11 @@ timestamp,query,fastener_type,drive_type,thread_size,length,material,grade,finis
 2026-05-22T14:39:03.446Z,M8 x 50mm BHCS alloy black oxide,button socket cap screw,m8,50mm,alloy,,black oxide,,CAT-0100,0.7932,0.8890,CAT-0859,0.5789,CAT-0651,0.5743
 2026-05-22T14:39:40.564Z,M8,,m8,,,,,,CAT-0221,0.8464,0.0724,CAT-1000,0.8464,CAT-0550,0.8425
 2026-05-22T14:54:46.708Z,m5-0.8 x 30mm threaded rod din 933 brass mech zinc,,m5-0.8,30mm,brass,,mech zinc,din 933,CAT-0436,0.5902,0.6592,CAT-0727,0.5843,CAT-0561,0.5816
+2026-05-22T15:36:28.116Z,m5-0.8 x 30mm threaded rod din 933 brass mech zinc,,m5-0.8,30mm,brass,,mech zinc,din 933,CAT-0436,0.5902,0.6592,CAT-0727,0.5843,CAT-0561,0.5816
+2026-05-22T15:38:35.119Z,m8-1.25 flat washer iso 7380 18-8 ss plain,flat washer,m8-1.25,,stainless steel,18-8 ss,plain,iso 7380,CAT-0593,0.6511,0.7393,CAT-0497,0.6423,CAT-0030,0.6311
+2026-05-22T15:42:34.804Z,m8-1.25 flat washer iso 7380 18-8 ss plain,flat washer,m8-1.25,,stainless steel,18-8 ss,plain,iso 7380,CAT-0593,0.6511,0.7393,CAT-0497,0.6423,CAT-0030,0.6311
+2026-05-22T15:51:35.497Z,M8-1.25 FLAT WASHER ISO 7380 18-8 SS PLAIN,,m8,,stainless steel,18-8 ss,plain,iso 7380,CAT-0111,1.0000,0.9000,CAT-0688,1.0000,CAT-0560,0.9032
+2026-05-22T15:53:57.150Z,M8-1.25 FLAT WASHER ISO 7380 18-8 SS PLAIN,,m8,,stainless steel,18-8 ss,plain,iso 7380,CAT-0688,1.0000,0.9436,CAT-0111,1.0000,CAT-0560,0.9032
+2026-05-22T15:57:13.361Z,M8-1.25 FLAT WASHER ISO 7380 18-8 SS PLAIN,,m8,,stainless steel,18-8 ss,plain,iso 7380,CAT-0688,1.0000,0.9436,CAT-0111,1.0000,CAT-0560,0.9032
+2026-05-22T15:58:02.915Z,#8-32 FLAT WASHER ASTM A307 18-8 SS HDG,flat washer,#8-32,,,18-8 ss,hdg,astm a307,CAT-0837,1.0000,0.9578,CAT-0860,0.8714,CAT-0767,0.8441
+2026-05-22T15:59:24.440Z,3/4-10 x 6ft threaded rod din 912 18-8 ss yel zn,,3/4-10,6ft,stainless steel,18-8 ss,yellow zinc,din 912,CAT-0043,1.0000,1.0000,CAT-0418,0.7873,CAT-0758,0.6552

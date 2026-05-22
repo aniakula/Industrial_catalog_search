@@ -139,7 +139,6 @@ async function main() {
       description:   desc.toLowerCase(),
       active:        row.active === "Y" ? "true" : "false",
       fastener_type: attrs.fastener_type ?? "",
-      drive_type:    attrs.drive_type    ?? "",
       thread_size:   attrs.thread_size   ?? "",
       length:        attrs.length        ?? "",
       material:      attrs.material      ?? "",

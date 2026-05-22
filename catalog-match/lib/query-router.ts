@@ -10,6 +10,7 @@ export interface RoutedQuery {
   selectedCatalogId?: string;
   reason?: string;
   classification_via?: "heuristic" | "llm";
+  requires_customer_confirmation?: boolean;
 }
 
 type CatalogCandidate = {
@@ -83,7 +84,10 @@ async function classifyQuery(query: string): Promise<{ type: QueryClassification
 
 function candidatePrompt(candidatesDump: string): string {
   return `You are selecting the BEST matching catalog item for an action-style user request.
-Choose exactly one row from the candidate list.
+Choose exactly one row from the candidate list. Make sure you serve the user the best item given the candidate list and the user's request.
+If they ask for the largest/smallest thread/height look at those to make your decison.
+Look at the description and other factors and general knowledge to make your decison.
+If they ask for a specific material, finish, grade, standard, look at the description and other factors given to make your decisison.
 
 Candidates (catalog_id | description):
 ${candidatesDump}
@@ -175,6 +179,11 @@ function orderHistoryPrompt(orderDump: string): string {
 Rows format:
 SKU | description | total_qty | num_orders | last_order_date
 
+if the user requests for a most recent/oldest order or something related, make sure to use the last_order_date to make your decisison.
+If the user requests for a specific quantity or most/least frequent look at the total_qty to make your decisison.
+If the user requests for a specific material, finish, grade, standard, look at the description and other factors given to make your decisison.
+Make sure to pick the best item given the order history dump and the user's request.
+
 ${orderDump}
 
 Return ONLY JSON:
@@ -235,6 +244,7 @@ async function resolveFromOrderHistory(
 export async function routeQuery(
   query: string,
   customerId: string | undefined,
+  allowHistoryWithoutCustomer: boolean,
   supabase: SupabaseClient,
 ): Promise<RoutedQuery> {
   const t0 = Date.now();
@@ -248,13 +258,24 @@ export async function routeQuery(
 
   if (classification === "action_history") {
     if (!customerId) {
-      const fallback = await resolveFromCatalog(query, supabase);
+      if (!allowHistoryWithoutCustomer) {
+        return {
+          classification: "action_history",
+          resolvedQuery: query,
+          originalQuery: query,
+          reason: "history query detected without customer_id",
+          classification_via: via,
+          requires_customer_confirmation: true,
+        };
+      }
+
+      // User explicitly confirmed to continue without customer context.
+      // Fall back to direct query matching using the original text.
       return {
-        classification: "action_catalog",
-        resolvedQuery: fallback.description,
+        classification: "normal_search",
+        resolvedQuery: query,
         originalQuery: query,
-        selectedCatalogId: fallback.catalog_id,
-        reason: "no customer_id provided; fell back to catalog resolver",
+        reason: "history query continued without customer_id; using direct query",
         classification_via: via,
       };
     }
